@@ -24,12 +24,22 @@
     {:status 200
      :body (get users id)}))
 
+(defn get-users [_]
+  {:status 200
+   :body @users})
+
+(defn get-user-by-id [{{:keys [id]} :path-params}]
+  {:status 200
+   :body (get @users id)})
+
 (def app
   (ring/ring-handler
    (ring/router
     ["/"
      ["" string-handler]
-     ["users" {:post create-user}]]
+     ["users" {:get get-users
+               :post create-user}]
+     ["users/:id" get-user-by-id]]
     {:data {:muuntaja m/instance
             :middleware [muuntaja/format-middleware]}})))
 
