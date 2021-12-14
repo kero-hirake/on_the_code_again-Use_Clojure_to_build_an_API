@@ -5,7 +5,9 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [javax.servlet/servlet-api "2.5"]
-                 [ring "1.9.4"]]
+                 [ring "1.9.4"]
+                 [metosin/reitit "0.5.15"]
+                 [metosin/muuntaja "0.6.8"]]
   :main ^:skip-aot user-api.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
