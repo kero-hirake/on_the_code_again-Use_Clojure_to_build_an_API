@@ -6,21 +6,30 @@
   (:gen-class))
 
 (defonce server (atom nil))
+(def users (atom {}))
 
 " '/' "
-" '/users' "
-" '/users/:id' "
-" '/uses' POST "
+" '/users'     全ユーザー取得"
+" '/users/:id' ID指定でユーザー取得"
+" '/uses' POST ユーザー追加"
 
 (defn string-handler [_]
   {:status 200
    :body "hello!"})
 
+(defn create-user [{user :body-params}]
+  (let [id (str (java.util.UUID/randomUUID))
+        users (->> (assoc user :id id)
+                  (swap! users assoc id))]
+    {:status 200
+     :body (get users id)}))
+
 (def app
   (ring/ring-handler
    (ring/router
     ["/"
-     ["" string-handler]]
+     ["" string-handler]
+     ["users" {:post create-user}]]
     {:data {:muuntaja m/instance
             :middleware [muuntaja/format-middleware]}})))
 
@@ -41,5 +50,4 @@
 
 (defn -main
   [& args]
-
   (println "Hello, World!"))
