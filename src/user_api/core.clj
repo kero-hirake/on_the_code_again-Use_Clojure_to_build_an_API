@@ -2,10 +2,10 @@
   (:require [ring.adapter.jetty :as jetty]
             [reitit.ring :as ring]
             [muuntaja.core :as m]
-            [reitit.ring.middleware.muuntaja :as muuntaja])
+            [reitit.ring.middleware.muuntaja :as muuntaja]
+            [integrant.core :as ig])
   (:gen-class))
 
-(defonce server (atom nil))
 (def users (atom {}))
 
 " '/' "
@@ -22,7 +22,7 @@
 (defn create-user [{user :body-params}]
   (let [id (str (java.util.UUID/randomUUID))
         users (->> (assoc user :id id)
-                  (swap! users assoc id))]
+                   (swap! users assoc id))]
     {:status 201
      :body (get users id)}))
 
@@ -37,14 +37,12 @@
 (defn update-user [{{:keys [id]} :path-params user :body-params}]
   (swap! users id user)
   {:status 200
-   :body  "updated"}
-  )
+   :body  "updated"})
 
 (defn delete-user [{{:keys [id]} :path-params}]
   (swap! users dissoc id)
   {:status 204
-   :body  ""}
-  )
+   :body  ""})
 
 (comment
   (clojure.pprint/pprint @users)
@@ -65,20 +63,20 @@
     {:data {:muuntaja m/instance
             :middleware [muuntaja/format-middleware]}})))
 
-(defn start-server [] 
-  (when-not @server
-    (reset! server (jetty/run-jetty #'app {:port 3000
-                                              :join? false}))))
-(defn stop-server []
-  (when @server
-    (.stop @server)
-    (reset! server nil)))
+(defmethod ig/init-key ::app [_ _]
+  string-handler)
 
-(defn reset-server []
-  (when @server
-    (stop-server)
-    (start-server)))
+(defmethod ig/init-key ::server [_ {:keys [app options]}]
+  (jetty/run-jetty app options))
 
-(defn -main
-  [& args]
-  (println "Hello, World!"))
+(defmethod ig/halt-key! ::server [_ server]
+  (.stop server))
+
+(def config
+  {::app {}
+   ::server {:app (ig/ref ::app)
+             :options {:port 3000
+                       :join? false}}})
+
+(defn -main  [& args]
+  (ig/init config))
