@@ -50,21 +50,21 @@
   ;(swap! users )
   )
 
-(def app
+(defmethod ig/init-key ::routes[_ _]
+  ["/"
+   ["" string-handler]
+   ["users" {:get get-users
+             :post create-user}]
+   ["users/:id" {:get get-user-by-id
+                 :put update-user
+                 :delete delete-user}]])
+
+(defmethod ig/init-key ::app [_ {:keys [routes]}]
   (ring/ring-handler
-   (ring/router
-    ["/"
-     ["" string-handler]
-     ["users" {:get get-users
-               :post create-user}]
-     ["users/:id" {:get get-user-by-id
-                   :put update-user
-                   :delete delete-user}]]
+   (ring/router 
+    routes
     {:data {:muuntaja m/instance
             :middleware [muuntaja/format-middleware]}})))
-
-(defmethod ig/init-key ::app [_ _]
-  string-handler)
 
 (defmethod ig/init-key ::server [_ {:keys [app options]}]
   (jetty/run-jetty app options))
@@ -73,7 +73,8 @@
   (.stop server))
 
 (def config
-  {::app {}
+  {::routes {}
+   ::app {:routes (ig/ref ::routes)}
    ::server {:app (ig/ref ::app)
              :options {:port 3000
                        :join? false}}})
