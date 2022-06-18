@@ -12,4 +12,8 @@
   :main ^:skip-aot user-api.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
-                       :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}})
+                       :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}
+             :dev {:source-paths ["dev/src"]
+                   :resource-paths ["dev/resources"]
+                   :dependencies [[integrant/repl "0.3.2"]]}
+             :repl {:repl-options {:init-ns user}}})
